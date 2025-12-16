@@ -1,1 +1,2 @@
-SQL scripts go here
+# CREATION OF A PLUGGABLE DATA
+
