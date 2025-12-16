@@ -60,7 +60,7 @@ Testing appointment scheduling and management functionality
 
 Testing patient record and profile management
 
-![img alt](the link)
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/0a51fa6f0cbac1f0ede250164586434b145d1dd8/test%20result%202.png)
 
 Testing doctor–patient assignment and visit matching logic
 
