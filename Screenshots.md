@@ -22,13 +22,13 @@ DAILY_TRACKER
 
 Tracks daily patient-related activities and records, including visit summaries, treatments administered, vital signs, follow-up notes, and staff observations. This helps monitor patient progress on a day-to-day basis and supports accurate clinical documentation.
 
-![img alt](the link)
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/21cb283e8284007a8049a206a5edae7e4cef544e/DAILY_TRACKER%20TABLE.png)
 
 DOCTORS
 
 Stores doctor profiles and professional details, including identification, specialization, contact information, availability schedules, and assigned departments. This supports proper doctor–patient assignment and efficient management of medical staff.
 
-![img alt](the link)
+![img alt]()
 
 HOSPITAL_AUDIT_LOG
 
