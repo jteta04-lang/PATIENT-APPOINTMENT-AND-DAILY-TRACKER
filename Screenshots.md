@@ -56,7 +56,7 @@ Records each patient visit to the healthcare facility, linking patients to docto
 
 Testing appointment scheduling and management functionality
 
-![img alt](the link)
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/362ed43d022b7597d5b49441e81d00423b959fcd/test%20result%201.png)
 
 Testing patient record and profile management
 
