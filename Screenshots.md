@@ -46,7 +46,7 @@ VISITS
 
 Records each patient visit to the healthcare facility, linking patients to doctors and appointments. It tracks visit dates, reasons for the visit, diagnoses, treatments provided, visit outcomes, and any follow-up notes. This table helps maintain a complete history of patient interactions and supports continuity of care.
 
-![img alt](the link)
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/1dd8dfdc75447ea3e0dca3cea9093c6ce59dd797/VISITS%20TABLE.png)
 
 # ER DIAGRAM
 
