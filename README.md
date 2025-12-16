@@ -63,4 +63,6 @@ Produce reports on appointment trends, missed visits, and patient activity for m
 
 https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/bd5890f048eaa614cd5d52ecc29c912fd0051108/code_documentation
 
+https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/53f870ee7235c9eca414ca0e2527fa325ea4b220/Screenshots.md
+
 
