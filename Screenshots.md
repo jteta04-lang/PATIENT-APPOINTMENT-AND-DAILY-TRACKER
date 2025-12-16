@@ -34,7 +34,7 @@ HOSPITAL_AUDIT_LOG
 
 Monitors and records system activities and changes across different tables, including user actions such as inserts, updates, and deletions. It stores details like the user performing the action, the affected table, the type of action, the time it occurred, and the related record ID. This supports accountability, auditing, and data integrity within the system.
 
-![img alt](the link)
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/2a10d833880f701d6004605da4a708968427d8ea/HOSPITAL_AUDIT_LOG%20TABLE.png)
 
 USERS/STAFFS.
 
