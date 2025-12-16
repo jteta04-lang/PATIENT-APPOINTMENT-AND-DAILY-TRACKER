@@ -65,4 +65,4 @@ https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/bd589
 
 https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/53f870ee7235c9eca414ca0e2527fa325ea4b220/Screenshots.md
 
-
+https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/ad38470ffe4034fb9b2786e0854fa6fc99e48e39/patient%20appointment.sql
