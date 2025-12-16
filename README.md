@@ -59,3 +59,8 @@ Generate Reports
 
 Produce reports on appointment trends, missed visits, and patient activity for management review
 
+## LINKS TO DOCUMENTATION
+
+https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/bd5890f048eaa614cd5d52ecc29c912fd0051108/code_documentation
+
+
