@@ -4,3 +4,80 @@ maintain daily activity logs, manage doctor and patient records, and monitor hea
 The system helps optimize hospital operations, ensures accurate record-keeping, and improves patient care by keeping all essential information organized and easily accessible.
 
 # PLUGGABLE DATABASE CREATED
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/main/Picture1.png?raw=true)
+
+PATIENTS
+
+Stores patient profiles including identification details, contact information, address/location, age, gender, medical reference information, and other relevant details needed for registration, appointment scheduling, and healthcare record management.
+
+![img alt](the link)
+
+APPOINTMENTS
+
+Maintains a record of patient appointments, including appointment dates and times, assigned doctors, appointment status, and related notes. This supports efficient scheduling, reduces conflicts, and ensures timely patient care.
+
+![img alt](the link)
+
+DAILY_TRACKER
+
+Tracks daily patient-related activities and records, including visit summaries, treatments administered, vital signs, follow-up notes, and staff observations. This helps monitor patient progress on a day-to-day basis and supports accurate clinical documentation.
+
+![img alt](the link)
+
+DOCTORS
+
+Stores doctor profiles and professional details, including identification, specialization, contact information, availability schedules, and assigned departments. This supports proper doctor–patient assignment and efficient management of medical staff.
+
+![img alt](the link)
+
+HOSPITAL_AUDIT_LOG
+
+Monitors and records system activities and changes across different tables, including user actions such as inserts, updates, and deletions. It stores details like the user performing the action, the affected table, the type of action, the time it occurred, and the related record ID. This supports accountability, auditing, and data integrity within the system.
+
+![img alt](the link)
+
+USERS/STAFFS.
+
+Contains system user information, including user roles (admin, receptionist, doctor, nurse), login credentials, contact details, and access privileges. This supports secure system access, role-based permissions, and accountability for actions performed within the application.
+
+![img alt](the link)
+
+VISITS
+
+Records each patient visit to the healthcare facility, linking patients to doctors and appointments. It tracks visit dates, reasons for the visit, diagnoses, treatments provided, visit outcomes, and any follow-up notes. This table helps maintain a complete history of patient interactions and supports continuity of care.
+
+![img alt](the link)
+
+# ER DIAGRAM
+
+![img alt](the link)
+
+# TEST RESULTS.
+
+Testing appointment scheduling and management functionality
+
+![img alt](the link)
+
+Testing patient record and profile management
+
+![img alt](the link)
+
+Testing doctor–patient assignment and visit matching logic
+
+![img alt](the link)
+
+Testing daily patient tracking and monitoring features
+
+![img alt](the link)
+
+Testing audit logging and report generation functionality
+
+![img alt](the link)
+
+
+
+
+
+
+
+
