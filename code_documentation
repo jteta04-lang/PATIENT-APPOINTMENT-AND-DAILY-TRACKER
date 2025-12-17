@@ -223,711 +223,226 @@ and can alert staff when adjustments are needed to improve efficiency and patien
 
 ** CODES**
 
--- First, disable any existing triggers that might interfere
-BEGIN
-    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_appointments_restrict_hospital DISABLE';
-    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_patients_compound_hospital DISABLE';
-EXCEPTION
-    WHEN OTHERS THEN NULL;
-END;
-/
+-----1. ALL PROCEDURES WITH PARAMETERS-------
+-----PATIENT MANAGEMENT PROCEDURES-------
+-- Add a new patient
+PROCEDURE add_patient (
+    p_patient_id   IN OUT NUMBER,
+    p_first_name   IN VARCHAR2,
+    p_last_name    IN VARCHAR2,
+    p_gender       IN VARCHAR2,
+    p_phone        IN VARCHAR2,
+    p_message      OUT VARCHAR2
+);
 
--- DATABASE INTERACTION AND TRANSACTION---
--- Procedure 1: add new patient (insert + in out parameter)
-CREATE OR REPLACE PROCEDURE add_patient (
-  p_patient_id IN OUT NUMBER,
-  p_first_name IN VARCHAR2,
-  p_last_name IN VARCHAR2,
-  p_gender IN VARCHAR2,
-  p_phone IN VARCHAR2,
-  p_message OUT VARCHAR2
-) AS
-BEGIN
-  -- If the patient_id is not provided, generate a new one
-  IF p_patient_id IS NULL THEN
-    SELECT patients_seq.NEXTVAL INTO p_patient_id FROM dual;
-  END IF;
+-- Bulk insert daily visits
+PROCEDURE bulk_insert_daily_visits;
 
-  -- Check if the phone number already exists
-  DECLARE
-    v_exists NUMBER;
-  BEGIN
-    SELECT COUNT(*)
-    INTO v_exists
-    FROM patients
-    WHERE phone = p_phone;
+-----APPOINTMENT MANAGEMENT PROCEDURES-----
+-- Schedule an appointment
+PROCEDURE schedule_appointment (
+    p_patient_id   IN NUMBER,
+    p_doctor_id    IN NUMBER,
+    p_date         IN DATE,
+    p_notes        IN VARCHAR2,
+    p_status       OUT VARCHAR2
+);
 
-    IF v_exists > 0 THEN
-      p_message := 'Error: Duplicate phone number. Please provide a unique phone number.';
-      RETURN;
-    END IF;
-  END;
-
-  -- Insert new patient record
-  INSERT INTO patients (patient_id, first_name, last_name, gender, phone)
-  VALUES (p_patient_id, p_first_name, p_last_name, p_gender, p_phone);
-
-  -- Success message
-  p_message := 'Patient added successfully with ID: ' || p_patient_id;
-
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Handle unexpected errors
-    p_message := 'Unexpected error: ' || SQLERRM;
-END;
-/
-
--- Procedure 2: schedule appointment (insert + exception handling)
-CREATE OR REPLACE PROCEDURE SCHEDULE_APPOINTMENT (
-    p_appointment_id IN OUT NUMBER,
-    p_patient_id IN NUMBER,
-    p_doctor_id IN NUMBER,
-    p_appointment_date IN DATE,
-    p_message OUT VARCHAR2
-) AS
-BEGIN
-    -- If the appointment ID is NULL, generate a new one
-    IF p_appointment_id IS NULL THEN
-        SELECT appointments_seq.NEXTVAL INTO p_appointment_id FROM dual;
-    END IF;
-
-    -- Insert the appointment record
-    INSERT INTO appointments (appointment_id, patient_id, doctor_id, appointment_date)
-    VALUES (p_appointment_id, p_patient_id, p_doctor_id, p_appointment_date);
-
-    -- Success message
-    p_message := 'Appointment scheduled successfully with ID ' || p_appointment_id;
-
-EXCEPTION
-    WHEN DUP_VAL_ON_INDEX THEN
-        p_message := 'Error: Duplicate appointment ID or data exists.';
-    WHEN OTHERS THEN
-        p_message := 'Unexpected error: ' || SQLERRM;
-END;
-/
-
--- Procedure 3: update appointment status (update + IN parameter)
-CREATE OR REPLACE PROCEDURE update_appointment_status (
+-- Update appointment status
+PROCEDURE update_appointment_status (
     p_appointment_id IN NUMBER,
-    p_new_status IN VARCHAR2,
-    p_feedback OUT VARCHAR2
-) AS
-BEGIN
-    UPDATE appointments
-    SET status = p_new_status
-    WHERE appointment_id = p_appointment_id;
+    p_new_status     IN VARCHAR2,
+    p_feedback       OUT VARCHAR2
+);
 
-    IF SQL%ROWCOUNT = 0 THEN
-        p_feedback := 'No appointment found with the given ID.';
-    ELSE
-        p_feedback := 'Appointment updated successfully.';
-    END IF;
+------AUDIT LOGGING PROCEDURE-----
+-- Centralized procedure to log actions
+CREATE OR REPLACE PROCEDURE log_hospital_audit (
+    p_action      VARCHAR2,
+    p_table_name  VARCHAR2,
+    p_record_id   VARCHAR2
+);
 
-EXCEPTION
-    WHEN OTHERS THEN
-        p_feedback := 'Error occurred: ' || SQLERRM;
-END;
-/
-
--- Procedure 4: delete patient (delete + cascade rule testing)
-CREATE OR REPLACE PROCEDURE delete_patient (
-    p_patient_id IN NUMBER,
-    p_result OUT VARCHAR2
-) AS
-    v_count NUMBER;
-BEGIN
-    SELECT COUNT(*)
-    INTO v_count
-    FROM appointments
-    WHERE patient_id = p_patient_id;
-
-    IF v_count > 0 THEN
-        p_result := 'Cannot delete patient. Existing appointments found.';
-        RETURN;
-    END IF;
-
-    DELETE FROM patients WHERE patient_id = p_patient_id;
-
-    IF SQL%ROWCOUNT = 0 THEN
-        p_result := 'Patient not found.';
-    ELSE
-        p_result := 'Patient deleted successfully.';
-    END IF;
-
-EXCEPTION
-    WHEN OTHERS THEN
-        p_result := 'Error: ' || SQLERRM;
-END;
-/
-
--- Procedure 5: count daily patient visits (aggregation + OUT parameter)
-CREATE OR REPLACE PROCEDURE daily_visit_count (
-    p_date IN DATE,
-    p_total OUT NUMBER
-) AS
-BEGIN
-    SELECT COUNT(*)
-    INTO p_total
-    FROM appointments
-    WHERE TRUNC(appointment_date) = TRUNC(p_date);
-
-EXCEPTION
-    WHEN OTHERS THEN
-        p_total := -1; -- indicates an error
-END;
-/
-
------- FUNCTIONS----
--- 1. calculate patient age
-CREATE OR REPLACE FUNCTION get_patient_age (
+------2. ALL FUNCTIONS WITH RETURN TYPES--------
+-- Get patient age
+FUNCTION get_patient_age (
     p_patient_id IN NUMBER
-) RETURN NUMBER
-IS
-    v_age NUMBER;
-BEGIN
-    SELECT TRUNC(MONTHS_BETWEEN(SYSDATE, date_of_birth) / 12)
-    INTO v_age
-    FROM patients
-    WHERE patient_id = p_patient_id;
+) RETURN NUMBER;
 
-    RETURN v_age;
-
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RETURN -1;  -- patient not found
-    WHEN OTHERS THEN
-        RETURN -2;  -- unexpected error
-END;
-/
-
--- 2. VALIDATE PHONE NUMBER FORMAT (VALIDATION)
-CREATE OR REPLACE FUNCTION validate_phone (
-    p_phone IN VARCHAR2
-) RETURN NUMBER
-IS
-BEGIN
-    IF REGEXP_LIKE(p_phone, '^[0-9]{10,13}$') THEN
-        RETURN 1;
-    ELSE
-        RETURN 0;
-    END IF;
-END;
-/
-
--- 3. CHECK IF DOCTOR EXISTS
-CREATE OR REPLACE FUNCTION doctor_exists (
+-- Check if doctor exists
+FUNCTION doctor_exists (
     p_doctor_id IN NUMBER
-) RETURN NUMBER
-IS
-    v_count NUMBER := 0;
-BEGIN
-    SELECT COUNT(*) INTO v_count
-    FROM doctors
-    WHERE doctor_id = p_doctor_id;
+) RETURN NUMBER;
 
-    IF v_count > 0 THEN
-        RETURN 1;
-    ELSE
-        RETURN 0;
-    END IF;
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN -1;  -- unexpected error
-END;
-/
-
--- 4. COUNT APPOINTMENTS FOR A PATIENT
-CREATE OR REPLACE FUNCTION count_patient_appointments (
+-- Count patient appointments
+FUNCTION count_patient_appointments (
     p_patient_id IN NUMBER
-) RETURN NUMBER
-IS
-    v_total NUMBER := 0;
+) RETURN NUMBER;
+
+-- Validate if hospital data modification is allowed
+FUNCTION hospital_restriction_check
+RETURN BOOLEAN;
+
+--------3. ALL TRIGGERS WITH LOGIC EXPLANATION-----
+-----SIMPLE TRIGGERS-----------
+-- trg_appointments_restrict_hospital
+-- Purpose: Prevents restricted operations on appointments & logs actions
+CREATE OR REPLACE TRIGGER trg_appointments_restrict_hospital
+BEFORE INSERT OR UPDATE OR DELETE ON appointments
+FOR EACH ROW
 BEGIN
-    SELECT COUNT(*) INTO v_total
-    FROM appointments
-    WHERE patient_id = p_patient_id;
-
-    RETURN v_total;
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN -1;
-END;
-/
-
--- 5. GET DOCTOR NAME BY ID
-CREATE OR REPLACE FUNCTION get_doctor_name (
-    p_doctor_id IN NUMBER
-) RETURN VARCHAR2
-IS
-    v_name VARCHAR2(200);
-BEGIN
-    SELECT first_name || ' ' || last_name
-    INTO v_name
-    FROM doctors
-    WHERE doctor_id = p_doctor_id;
-
-    RETURN v_name;
-
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RETURN 'DOCTOR NOT FOUND';
-    WHEN OTHERS THEN
-        RETURN 'ERROR';
-END;
-/
-
--- EXPLICIT CURSOR: LIST ALL PATIENTS WITH MORE THAN 3 APPOINTMENTS
-CREATE OR REPLACE PROCEDURE list_frequent_patients
-AS
-    CURSOR c_patients IS
-        SELECT p.patient_id, p.first_name, p.last_name,
-               COUNT(a.appointment_id) AS total_visits
-        FROM patients p
-        JOIN appointments a ON p.patient_id = a.patient_id
-        GROUP BY p.patient_id, p.first_name, p.last_name
-        HAVING COUNT(a.appointment_id) > 3;
-
-    v_id   patients.patient_id%TYPE;
-    v_fn   patients.first_name%TYPE;
-    v_ln   patients.last_name%TYPE;
-    v_count NUMBER;
-BEGIN
-    OPEN c_patients;
-
-    LOOP
-        FETCH c_patients INTO v_id, v_fn, v_ln, v_count;
-        EXIT WHEN c_patients%NOTFOUND;
-
-        DBMS_OUTPUT.PUT_LINE(
-            'Patient: ' || v_fn || ' ' || v_ln ||
-            ' | Total Visits: ' || v_count
+    IF NOT hospital_restriction_check THEN
+        RAISE_APPLICATION_ERROR(
+            -20001,
+            'Data modification is not allowed today in the Patient Appointment & Daily Tracker System'
         );
-    END LOOP;
+    END IF;
 
-    CLOSE c_patients;
+    IF INSERTING THEN
+        log_hospital_audit('INSERT', 'APPOINTMENTS', :NEW.appointment_id);
+    ELSIF UPDATING THEN
+        log_hospital_audit('UPDATE', 'APPOINTMENTS', :NEW.appointment_id);
+    ELSIF DELETING THEN
+        log_hospital_audit('DELETE', 'APPOINTMENTS', :OLD.appointment_id);
+    END IF;
 END;
-/
 
--- CURSOR FOR LOOP: LIST ALL DOCTORS WITH NUMBER OF PATIENTS
-CREATE OR REPLACE PROCEDURE doctor_visit_summary
-AS
-    CURSOR c_doctors IS
-        SELECT d.doctor_id,
-               d.first_name || ' ' || d.last_name AS doctor_name,
-               COUNT(a.appointment_id) AS total_appointments
-        FROM doctors d
-        LEFT JOIN appointments a ON d.doctor_id = a.doctor_id
-        GROUP BY d.doctor_id, d.first_name, d.last_name;
-BEGIN
-    FOR doc IN c_doctors LOOP
-        DBMS_OUTPUT.PUT_LINE(
-            'Doctor: ' || doc.doctor_name ||
-            ' | Appointments: ' || doc.total_appointments
-        );
-    END LOOP;
-END;
-/
+---------COUMPOUND TRIGGER------
+-- trg_patients_compound_hospital
+-- Purpose: Enforces restrictions & audits for bulk operations on patients table
+CREATE OR REPLACE TRIGGER trg_patients_compound_hospital
+FOR INSERT OR UPDATE OR DELETE ON patients
+COMPOUND TRIGGER
 
--- BULK COLLECT CURSOR: LOAD ALL PATIENTS IDs
-CREATE OR REPLACE PROCEDURE bulk_load_patients
-AS
-    TYPE patient_list IS TABLE OF NUMBER;
-    v_patients patient_list;
-BEGIN
-    SELECT patient_id BULK COLLECT INTO v_patients
-    FROM patients;
+    BEFORE STATEMENT IS
+    BEGIN
+        IF NOT hospital_restriction_check THEN
+            RAISE_APPLICATION_ERROR(
+                -20002,
+                'Operation blocked by Patient Appointment & Daily Tracker System rules'
+            );
+        END IF;
+    END BEFORE STATEMENT;
 
-    DBMS_OUTPUT.PUT_LINE('Loaded ' || v_patients.COUNT || ' patients in memory.');
-EXCEPTION
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
-END;
-/
+    AFTER EACH ROW IS
+    BEGIN
+        IF INSERTING THEN
+            log_hospital_audit('INSERT', 'PATIENTS', :NEW.patient_id);
+        ELSIF UPDATING THEN
+            log_hospital_audit('UPDATE', 'PATIENTS', :NEW.patient_id);
+        ELSIF DELETING THEN
+            log_hospital_audit('DELETE', 'PATIENTS', :OLD.patient_id);
+        END IF;
+    END AFTER EACH ROW;
 
--- BULK INSERT USING FORALL
-CREATE OR REPLACE PROCEDURE bulk_insert_daily_visits
-AS
-    TYPE visit_rec IS RECORD (
-        patient_id NUMBER,
-        doctor_id  NUMBER,
-        visit_date DATE
-    );
+END trg_patients_compound_hospital;
 
-    TYPE visit_table IS TABLE OF visit_rec;
-    v_visits visit_table := visit_table();
-BEGIN
-    -- Add sample entries
-    v_visits.EXTEND(3);
-    v_visits(1) := visit_rec(101, 5, SYSDATE);
-    v_visits(2) := visit_rec(102, 3, SYSDATE);
-    v_visits(3) := visit_rec(110, 4, SYSDATE);
-
-    -- Bulk insert into APPOINTMENTS
-    FORALL i IN 1 .. v_visits.COUNT
-        INSERT INTO appointments (
-            appointment_id,
-            patient_id,
-            doctor_id,
-            appointment_date,
-            reason
-        ) VALUES (
-            appointments_seq.NEXTVAL,
-            v_visits(i).patient_id,
-            v_visits(i).doctor_id,
-            v_visits(i).visit_date,
-            'BULK INSERT'
-        );
-
-    DBMS_OUTPUT.PUT_LINE('Bulk insert completed: ' || v_visits.COUNT || ' records');
-END;
-/
-
--- WINDOW FUNCTIONS
--- Note: These are SELECT statements, not procedures/functions
-
--- PACKAGE SPECIALIZATION
+----------4. PACKAGES (SPECIALIZATION &BODY)---------
+----PACKAGE SPECIFICATION--------
 CREATE OR REPLACE PACKAGE hospital_mgmt_pkg IS
-    ---------------------------------------
-    -- PATIENT MANAGEMENT
-    ---------------------------------------
-    PROCEDURE add_patient (
-        p_patient_id   IN OUT NUMBER,
-        p_first_name   IN VARCHAR2,
-        p_last_name    IN VARCHAR2,
-        p_gender       IN VARCHAR2,
-        p_phone        IN VARCHAR2,
-        p_message      OUT VARCHAR2
+
+    -- Patient Management
+    PROCEDURE add_patient(
+        p_patient_id IN OUT NUMBER,
+        p_first_name IN VARCHAR2,
+        p_last_name  IN VARCHAR2,
+        p_gender     IN VARCHAR2,
+        p_phone      IN VARCHAR2,
+        p_message    OUT VARCHAR2
     );
 
-    ---------------------------------------
-    -- APPOINTMENT MANAGEMENT
-    ---------------------------------------
-    PROCEDURE schedule_appointment (
-        p_patient_id   IN NUMBER,
-        p_doctor_id    IN NUMBER,
-        p_date         IN DATE,
-        p_notes        IN VARCHAR2,
-        p_status       OUT VARCHAR2
+    -- Appointment Management
+    PROCEDURE schedule_appointment(
+        p_patient_id IN NUMBER,
+        p_doctor_id  IN NUMBER,
+        p_date       IN DATE,
+        p_notes     IN VARCHAR2,
+        p_status    OUT VARCHAR2
     );
 
-    PROCEDURE update_appointment_status (
+    PROCEDURE update_appointment_status(
         p_appointment_id IN NUMBER,
         p_new_status     IN VARCHAR2,
         p_feedback       OUT VARCHAR2
     );
 
-    ---------------------------------------
-    -- UTILITY FUNCTIONS
-    ---------------------------------------
-    FUNCTION get_patient_age (
-        p_patient_id IN NUMBER
-    ) RETURN NUMBER;
+    -- Utility Functions
+    FUNCTION get_patient_age(p_patient_id IN NUMBER) RETURN NUMBER;
+    FUNCTION doctor_exists(p_doctor_id IN NUMBER) RETURN NUMBER;
+    FUNCTION count_patient_appointments(p_patient_id IN NUMBER) RETURN NUMBER;
 
-    FUNCTION doctor_exists (
-        p_doctor_id IN NUMBER
-    ) RETURN NUMBER;
-
-    FUNCTION count_patient_appointments (
-        p_patient_id IN NUMBER
-    ) RETURN NUMBER;
-
-    ---------------------------------------
-    -- BULK OPERATIONS
-    ---------------------------------------
+    -- Bulk insert daily visits
     PROCEDURE bulk_insert_daily_visits;
 
 END hospital_mgmt_pkg;
-/
 
--- PACKAGE BODY (IMPLEMENTATION)
+--------PACKAGE BODY--------
 CREATE OR REPLACE PACKAGE BODY hospital_mgmt_pkg IS
 
-    -----------------------------------------------------------
-    -- 1. PATIENT MANAGEMENT
-    -----------------------------------------------------------
-
-    -- Add a new patient
-    PROCEDURE add_patient (
-        p_patient_id   IN OUT NUMBER,
-        p_first_name   IN VARCHAR2,
-        p_last_name    IN VARCHAR2,
-        p_gender       IN VARCHAR2,
-        p_phone        IN VARCHAR2,
-        p_message      OUT VARCHAR2
-    ) AS
-        v_exists NUMBER;
-    BEGIN
-        -- If patient_id is provided, use it; otherwise generate new
-        IF p_patient_id IS NULL THEN
-            SELECT patients_seq.NEXTVAL INTO p_patient_id FROM dual;
-        END IF;
-
-        -- Check for duplicate phone
-        SELECT COUNT(*)
-        INTO v_exists
-        FROM patients
-        WHERE phone = p_phone;
-
-        IF v_exists > 0 THEN
-            p_message := 'Error: Duplicate phone number.';
-            RETURN;
-        END IF;
-
-        -- Insert patient
-        INSERT INTO patients (patient_id, first_name, last_name, gender, phone)
-        VALUES (p_patient_id, p_first_name, p_last_name, p_gender, p_phone);
-
-        p_message := 'Patient ' || p_first_name || ' added successfully with ID: ' || p_patient_id;
-    EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-            p_message := 'Duplicate patient or phone number.';
-        WHEN OTHERS THEN
-            p_message := 'Error: ' || SQLERRM;
-    END add_patient;
+    -- Add patient
+    PROCEDURE add_patient(...) AS BEGIN ... END;
 
     -- Get patient age
-    FUNCTION get_patient_age (
-        p_patient_id IN NUMBER
-    ) RETURN NUMBER IS
-        v_age NUMBER;
-    BEGIN
-        SELECT TRUNC(MONTHS_BETWEEN(SYSDATE, date_of_birth) / 12)
-        INTO v_age
-        FROM patients
-        WHERE patient_id = p_patient_id;
+    FUNCTION get_patient_age(...) RETURN NUMBER IS BEGIN ... END;
 
-        RETURN v_age;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RETURN -1;
-        WHEN OTHERS THEN
-            RETURN -2;
-    END get_patient_age;
+    -- Count patient appointments
+    FUNCTION count_patient_appointments(...) RETURN NUMBER IS BEGIN ... END;
 
-    -- Count appointments for a patient
-    FUNCTION count_patient_appointments (
-        p_patient_id IN NUMBER
-    ) RETURN NUMBER IS
-        v_total NUMBER;
-    BEGIN
-        SELECT COUNT(*) INTO v_total FROM appointments WHERE patient_id = p_patient_id;
-        RETURN v_total;
-    EXCEPTION
-        WHEN OTHERS THEN
-            RETURN -1;
-    END count_patient_appointments;
+    -- Check doctor existence
+    FUNCTION doctor_exists(...) RETURN NUMBER IS BEGIN ... END;
 
-    -----------------------------------------------------------
-    -- 2. DOCTOR MANAGEMENT
-    -----------------------------------------------------------
-
-    -- Check if doctor exists
-    FUNCTION doctor_exists (
-        p_doctor_id IN NUMBER
-    ) RETURN NUMBER IS
-        v_count NUMBER;
-    BEGIN
-        SELECT COUNT(*) INTO v_count FROM doctors WHERE doctor_id = p_doctor_id;
-        RETURN CASE WHEN v_count > 0 THEN 1 ELSE 0 END;
-    EXCEPTION
-        WHEN OTHERS THEN
-            RETURN -1;
-    END doctor_exists;
-
-    -----------------------------------------------------------
-    -- 3. APPOINTMENT MANAGEMENT
-    -----------------------------------------------------------
-
-    -- Schedule an appointment
-    PROCEDURE schedule_appointment (
-        p_patient_id   IN NUMBER,
-        p_doctor_id    IN NUMBER,
-        p_date         IN DATE,
-        p_notes        IN VARCHAR2,
-        p_status       OUT VARCHAR2
-    ) AS
-        v_appointment_id NUMBER;
-    BEGIN
-        SELECT appointments_seq.NEXTVAL INTO v_appointment_id FROM dual;
-        
-        INSERT INTO appointments (appointment_id, patient_id, doctor_id, appointment_date, reason)
-        VALUES (v_appointment_id, p_patient_id, p_doctor_id, p_date, p_notes);
-
-        p_status := 'Appointment booked successfully with ID: ' || v_appointment_id;
-    EXCEPTION
-        WHEN OTHERS THEN
-            p_status := 'Error: ' || SQLERRM;
-    END schedule_appointment;
+    -- Schedule appointment
+    PROCEDURE schedule_appointment(...) AS BEGIN ... END;
 
     -- Update appointment status
-    PROCEDURE update_appointment_status (
-        p_appointment_id IN NUMBER,
-        p_new_status     IN VARCHAR2,
-        p_feedback       OUT VARCHAR2
-    ) AS
-    BEGIN
-        UPDATE appointments
-        SET status = p_new_status
-        WHERE appointment_id = p_appointment_id;
-
-        IF SQL%ROWCOUNT = 0 THEN
-            p_feedback := 'Appointment not found.';
-        ELSE
-            p_feedback := 'Status updated successfully.';
-        END IF;
-    EXCEPTION
-        WHEN OTHERS THEN
-            p_feedback := 'Error: ' || SQLERRM;
-    END update_appointment_status;
+    PROCEDURE update_appointment_status(...) AS BEGIN ... END;
 
     -- Bulk insert daily visits
-    PROCEDURE bulk_insert_daily_visits AS
-        TYPE visit_rec IS RECORD (
-            patient_id NUMBER,
-            doctor_id  NUMBER,
-            visit_date DATE
-        );
-        TYPE visit_table IS TABLE OF visit_rec;
-        v_visits visit_table := visit_table();
-    BEGIN
-        v_visits.EXTEND(3);
-        v_visits(1) := visit_rec(101, 5, SYSDATE);
-        v_visits(2) := visit_rec(102, 3, SYSDATE);
-        v_visits(3) := visit_rec(110, 4, SYSDATE);
-
-        FORALL i IN 1..v_visits.COUNT
-            INSERT INTO appointments (appointment_id, patient_id, doctor_id, appointment_date, reason)
-            VALUES (appointments_seq.NEXTVAL, v_visits(i).patient_id, v_visits(i).doctor_id, v_visits(i).visit_date, 'BULK INSERT');
-
-        DBMS_OUTPUT.PUT_LINE('Bulk insert completed: ' || v_visits.COUNT || ' records.');
-    END bulk_insert_daily_visits;
+    PROCEDURE bulk_insert_daily_visits AS BEGIN ... END;
 
 END hospital_mgmt_pkg;
-/
 
--- EXCEPTION HANDLING EXAMPLES
--- Predefined Exceptions
-/*
-DECLARE
-    p_patient_id patients.patient_id%TYPE := 1;
-    v_full_name VARCHAR2(50);
-BEGIN
-    SELECT first_name || ' ' || last_name
-    INTO v_full_name
-    FROM patients
-    WHERE patient_id = p_patient_id;
 
-    DBMS_OUTPUT.PUT_LINE('Patient Name: ' || v_full_name);
+-------5.Analytics Queries (Aggregations & Window Functions)--------
+------DAILY VISIT COUNT--------
+SELECT visit_date, COUNT(visit_id) AS daily_visit_count
+FROM visits
+GROUP BY visit_date
+ORDER BY visit_date DESC;
 
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        DBMS_OUTPUT.PUT_LINE('Patient not found in the system.');
-    WHEN TOO_MANY_ROWS THEN
-        DBMS_OUTPUT.PUT_LINE('Duplicate patient records detected.');
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
-END;
-/
+------CONFLICT CHECKING (DOUBLE BOOKING)---
+SELECT COUNT(*) AS conflicts
+FROM appointments
+WHERE doctor_id = 2
+  AND appointment_date = TO_DATE('2025-12-12', 'YYYY-MM-DD')
+  AND TO_TIMESTAMP('10:00 AM', 'HH:MI AM') BETWEEN appointment_date AND appointment_date + INTERVAL '1' HOUR;
 
--- Custom Exceptions
-DECLARE
-    e_time_conflict EXCEPTION;
-    appointment_exists BOOLEAN;
-    v_doctor_id NUMBER := 1;
-    v_appointment_time DATE := SYSDATE;
-    v_count NUMBER;
-BEGIN
-    SELECT COUNT(*)
-    INTO v_count
-    FROM appointments
-    WHERE doctor_id = v_doctor_id
-      AND appointment_time = v_appointment_time;
+--------EDGE CASE CHECKS----------
+-- Double Booking
+SELECT appointment_id
+FROM appointments
+WHERE doctor_id = :DOC200
+  AND appointment_date = TO_DATE(:appointment_date, '2022-12-01')
+  AND TO_TIMESTAMP(:appointment_time, '12:12 AM') BETWEEN appointment_date AND appointment_date + INTERVAL '1' HOUR;
 
-    IF v_count > 0 THEN
-        appointment_exists := TRUE;
-    ELSE
-        appointment_exists := FALSE;
-    END IF;
+-- Invalid Patient (FK)
+SELECT patient_id
+FROM patients
+WHERE patient_id = :1;
 
-    IF appointment_exists THEN
-        RAISE e_time_conflict;
-    END IF;
+-- Constraint violation
+SELECT appointment_no
+FROM appointments
+WHERE status NOT IN ('SCHEDULED', 'COMPLETED', 'CANCELLED');
 
-    DBMS_OUTPUT.PUT_LINE('Appointment can be scheduled.');
+-- Unique constraint violation
+SELECT COUNT(*)
+FROM appointments
+WHERE patient_id = :2
+  AND doctor_id = :DOC200
+  AND appointment_date = TO_DATE(:appointment_date, '2020-12-12')
+  AND TO_TIMESTAMP(:appointment_time, '12:00 AM') BETWEEN appointment_date AND appointment_date + INTERVAL '1' HOUR;
 
-EXCEPTION
-    WHEN e_time_conflict THEN
-        DBMS_OUTPUT.PUT_LINE('Doctor already has an appointment at this time.');
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
-END;
-/
-*/
 
--- TESTING PROCEDURES
--- Test procedure: add patient
-DECLARE
-    v_patient_id NUMBER;
-    v_message    VARCHAR2(100);
-BEGIN
-    add_patient(v_patient_id, 'Test', 'User', 'M', '0788282828', v_message);
-    DBMS_OUTPUT.PUT_LINE(v_message);
-    DBMS_OUTPUT.PUT_LINE('New Patient ID: ' || v_patient_id);
-END;
-/
 
--- Execute the hospital package
-SET SERVEROUTPUT ON;
-BEGIN
-    -- Test the package
-    DECLARE
-        v_msg VARCHAR2(200);
-        v_status VARCHAR2(200);
-        v_feedback VARCHAR2(200);
-        v_patient_id NUMBER := NULL;
-    BEGIN
-        -- Test adding a patient
-        hospital_mgmt_pkg.add_patient(
-            p_patient_id => v_patient_id,
-            p_first_name => 'John',
-            p_last_name => 'Smith',
-            p_gender => 'M',
-            p_phone => '1234567890',
-            p_message => v_msg
-        );
-        DBMS_OUTPUT.PUT_LINE('Add Patient: ' || v_msg);
-        
-        -- Test scheduling an appointment if patient was added
-        IF v_patient_id IS NOT NULL THEN
-            hospital_mgmt_pkg.schedule_appointment(
-                p_patient_id => v_patient_id,
-                p_doctor_id => 1,
-                p_date => SYSDATE,
-                p_notes => 'Regular checkup',
-                p_status => v_status
-            );
-            DBMS_OUTPUT.PUT_LINE('Schedule Appointment: ' || v_status);
-        END IF;
-        
-        -- Test other functions
-        IF v_patient_id IS NOT NULL THEN
-            DBMS_OUTPUT.PUT_LINE('Patient Age: ' || hospital_mgmt_pkg.get_patient_age(v_patient_id));
-            DBMS_OUTPUT.PUT_LINE('Doctor Exists (ID=1): ' || hospital_mgmt_pkg.doctor_exists(1));
-            DBMS_OUTPUT.PUT_LINE('Appointment Count: ' || hospital_mgmt_pkg.count_patient_appointments(v_patient_id));
-        END IF;
-    END;
-END;
-/
 
--- Re-enable triggers
-BEGIN
-    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_appointments_restrict_hospital ENABLE';
-    EXECUTE IMMEDIATE 'ALTER TRIGGER trg_patients_compound_hospital ENABLE';
-EXCEPTION
-    WHEN OTHERS THEN NULL;
-END;
-/
-
-COMMIT;
