@@ -72,8 +72,7 @@ Testing daily patient tracking and monitoring features
 
 Testing audit logging and report generation functionality
 
-![img alt](<img width="957" height="506" alt="image" src="https://github.com/user-attachments/assets/dfeea79f-839c-4a23-ab6a-18879b46dd75" />
-)
+![img alt]()
 
 
 
