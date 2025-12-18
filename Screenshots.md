@@ -10,7 +10,7 @@ PATIENTS
 
 Stores patient profiles including identification details, contact information, address/location, age, gender, medical reference information, and other relevant details needed for registration, appointment scheduling, and healthcare record management.
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/aea646cf635e2fe7fc885da86ef8fcdd94e1acc1/My%20screenshots/PATIENTS%20TABLE.png)
 
 APPOINTMENTS
 
