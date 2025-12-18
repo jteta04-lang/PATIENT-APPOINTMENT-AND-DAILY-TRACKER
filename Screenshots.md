@@ -64,7 +64,7 @@ Testing patient record and profile management
 
 Testing doctor–patient assignment and visit matching logic
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/7f542aa5c65f1cc6e01efcf1b1b5e2b87942a95c/My%20screenshots/test%20result%203.png)
 
 Testing daily patient tracking and monitoring features
 
