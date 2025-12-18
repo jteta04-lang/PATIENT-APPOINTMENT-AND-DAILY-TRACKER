@@ -16,7 +16,7 @@ APPOINTMENTS
 
 Maintains a record of patient appointments, including appointment dates and times, assigned doctors, appointment status, and related notes. This supports efficient scheduling, reduces conflicts, and ensures timely patient care.
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/7cb420476a85d6781bd23bf4ed67bd24460bf005/My%20screenshots/APPOINTMENTS%20TABLE.png)
 
 DAILY_TRACKER
 
