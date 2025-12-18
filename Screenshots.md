@@ -40,7 +40,7 @@ USERS/STAFFS.
 
 Contains system user information, including user roles (admin, receptionist, doctor, nurse), login credentials, contact details, and access privileges. This supports secure system access, role-based permissions, and accountability for actions performed within the application.
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/d5351b71c1e4d632695167dbd3db05a18dc3fdd8/My%20screenshots/USER-STAFF%20TABLE.png)
 
 VISITS
 
