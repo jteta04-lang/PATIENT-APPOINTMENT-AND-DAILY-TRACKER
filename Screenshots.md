@@ -4,7 +4,7 @@ maintain daily activity logs, manage doctor and patient records, and monitor hea
 The system helps optimize hospital operations, ensures accurate record-keeping, and improves patient care by keeping all essential information organized and easily accessible.
 
 # PLUGGABLE DATABASE CREATED
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/9f068b7a4a90f114490c5352fb26edc226595208/My%20screenshots/PDB%20CREATION.png)
 
 PATIENTS
 
