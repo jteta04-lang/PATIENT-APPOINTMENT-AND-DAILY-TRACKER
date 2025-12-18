@@ -68,7 +68,7 @@ Testing doctor–patient assignment and visit matching logic
 
 Testing daily patient tracking and monitoring features
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/29890c7a84ddcb8c62747462b8dc4587113ed869/My%20screenshots/test%20result%204.png)
 
 Testing audit logging and report generation functionality
 
