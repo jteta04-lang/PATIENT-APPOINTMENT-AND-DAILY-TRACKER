@@ -28,7 +28,7 @@ DOCTORS
 
 Stores doctor profiles and professional details, including identification, specialization, contact information, availability schedules, and assigned departments. This supports proper doctor–patient assignment and efficient management of medical staff.
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/f4cd26f0a68bbf0c1defd093c1b6946e674e3766/My%20screenshots/DOCTORS%20TABLE.png)
 
 HOSPITAL_AUDIT_LOG
 
