@@ -50,7 +50,7 @@ Records each patient visit to the healthcare facility, linking patients to docto
 
 # ER DIAGRAM
 
-![img alt]()
+![img alt](https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/8b21414f8326167669e5e503ad349ff702344652/My%20screenshots/ER%20DIAGRAM.png)
 
 # TEST RESULTS.
 
