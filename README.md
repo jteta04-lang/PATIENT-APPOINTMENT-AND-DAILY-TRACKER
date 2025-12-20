@@ -70,3 +70,7 @@ https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/a64cc
 https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/f119bf66c847ed80cefd742970de11bd5c13799b/code_documentation
 
 https://github.com/jteta04-lang/PATIENT-APPOINTMENT-AND-DAILY-TRACKER/blob/bb30d616d3f3490bee91949bc30b7105e334c5d9/patient%20appointment.sql
+
+## PowerPoint Presentation
+
+https://docs.google.com/presentation/d/1Hl3b5W7zZh1srLFnA0LHej5YbcTre7nr/edit?usp=sharing&ouid=114916101264646490409&rtpof=true&sd=true
